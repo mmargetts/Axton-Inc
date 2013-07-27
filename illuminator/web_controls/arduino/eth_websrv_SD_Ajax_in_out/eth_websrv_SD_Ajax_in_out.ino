@@ -46,7 +46,11 @@ EthernetServer server(80);  // create a server at port 80
 File webFile;               // the web page file on the SD card
 char HTTP_req[REQ_BUF_SZ] = {0}; // buffered HTTP request stored as null terminated string
 char req_index = 0;              // index into HTTP_req buffer
-boolean DATA_state[9] = {0}; // stores the states of the LEDs
+
+boolean dataLineState[2] = {0};
+char* dataLineNames[] = {"DATA8=1","DATA8=0","DATA9=1","DATA9=0"};
+int pinInArrary[]={2,3,5,6,7};
+int pinOutArrary[]={8,9};
 
 void setup()
 {
@@ -69,22 +73,19 @@ void setup()
         return;  // can't find index file
     }
     Serial.println("SUCCESS - Found index.htm file.");
-    // set pin mode
-    pinMode(2 , OUTPUT);
-    pinMode(3 , OUTPUT);
-    pinMode(5 , OUTPUT);
-    pinMode(6 , OUTPUT);
-    pinMode(7 , OUTPUT);
-    pinMode(8 , OUTPUT);
-    pinMode(9 , OUTPUT);
-
-    digitalWrite(2, HIGH);
-    digitalWrite(3, HIGH);
-    digitalWrite(5, HIGH);
-    digitalWrite(6, HIGH);
-    digitalWrite(7, HIGH);
-    digitalWrite(8, HIGH);
-    digitalWrite(9, HIGH);
+  
+    // set pin mode to input to read model
+    for(int i=0;i<sizeof(pinInArrary);i++){
+      pinMode(pinInArrary[i], INPUT);
+    }
+    
+    // these are for illuminator control
+    for(int i=0;i<sizeof(pinOutArrary);i++){
+      pinMode(pinOutArrary[i], OUTPUT);
+      // set default high for control lines
+      digitalWrite(pinOutArrary[i], HIGH);
+    }
+  
     
     
     Ethernet.begin(mac, ip);  // initialize Ethernet device
@@ -166,69 +167,18 @@ void loop()
 // also saves the state of the LEDs
 void SetDLs(void)
 {
-    // DATA 2 (pin 2)
-    if (StrContains(HTTP_req, "DATA2=1")) {
-        DATA_state[0] = 1;  // save LED state
-        digitalWrite(2, LOW);
+  for (int i=0;i<sizeof(pinOutArrary);i++){
+    for(int k=0; k<sizeof(dataLineNames);k++){
+      if (StrContains(HTTP_req, dataLineNames[k])) {
+          dataLineState[i] = 1;  // save LED state
+          digitalWrite(pinOutArrary[i], LOW);
+      }
+      else if (StrContains(HTTP_req, dataLineNames[k])) {
+          dataLineState[i] = 0;  // save LED state
+          digitalWrite(pinOutArrary[i], HIGH);
+      }
     }
-    else if (StrContains(HTTP_req, "DATA2=0")) {
-        DATA_state[0] = 0;  // save LED state
-        digitalWrite(2, HIGH);
-    }
-    // DATA 3 (pin 3)
-    if (StrContains(HTTP_req, "DATA3=1")) {
-        DATA_state[1] = 1;  // save LED state
-        digitalWrite(3, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA3=0")) {
-        DATA_state[1] = 0;  // save LED state
-        digitalWrite(3, HIGH);
-    }
-    // DATA 5
-    if (StrContains(HTTP_req, "DATA5=1")) {
-        DATA_state[2] = 1;  // save LED state
-        digitalWrite(5, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA5=0")) {
-        DATA_state[2] = 0;  // save LED state
-        digitalWrite(5, HIGH);
-    }
-    // DATA6
-    if (StrContains(HTTP_req, "DATA6=1")) {
-        DATA_state[3] = 1;  // save LED state
-        digitalWrite(6, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA6=0")) {
-        DATA_state[3] = 0;  // save LED state
-        digitalWrite(6, HIGH);
-    }
-    // DATA7
-    if (StrContains(HTTP_req, "DATA7=1")) {
-        DATA_state[4] = 1;  // save LED state
-        digitalWrite(7, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA7=0")) {
-        DATA_state[4] = 0;  // save LED state
-        digitalWrite(7, HIGH);
-    }
-    // DATA8
-    if (StrContains(HTTP_req, "DATA8=1")) {
-        DATA_state[5] = 1;  // save LED state
-        digitalWrite(8, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA8=0")) {
-        DATA_state[5] = 0;  // save LED state
-        digitalWrite(8, HIGH);
-    }
-    // DATA9
-    if (StrContains(HTTP_req, "DATA9=1")) {
-        DATA_state[6] = 1;  // save LED state
-        digitalWrite(9, LOW);
-    }
-    else if (StrContains(HTTP_req, "DATA9=0")) {
-        DATA_state[6] = 0;  // save LED state
-        digitalWrite(9, HIGH);
-    }
+  }
 }
 
 // send the XML file DATA status
@@ -236,11 +186,23 @@ void XML_response(EthernetClient cl)
 {
     cl.print("<?xml version = \"1.0\" ?>");
     cl.print("<inputs>");
+
+    // read inputs
+    for (int i = 0; i < sizeof(pinInArrary); i++) {
+        cl.print("<switch>");
+        if (digitalRead(pinInArrary[i])) {
+            cl.print("ON");
+        }
+        else {
+            cl.print("OFF");
+        }
+        cl.println("</switch>");
+    }
+
     // checkbox DATA states
-    
-    for (int i = 0; i < sizeof(DATA_state); i++){
+    for (int i = 0; i < sizeof(dataLineState); i++){
         cl.print("<DATA>");
-        if (DATA_state[i]) {
+        if (dataLineState[i]) {
             cl.print("checked");
         }
         else {
