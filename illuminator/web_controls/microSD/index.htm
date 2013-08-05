@@ -21,34 +21,21 @@
 					if (this.status == 200) {
 						if (this.responseXML != null) {
 							// XML file received - contains analog values, switch values and LED states
-							// DATA2
-							if (this.responseXML.getElementsByTagName('DATA')[0].childNodes[0].nodeValue === "checked") {
-								document.DL_form.DATA2.checked = true;
+							var count;
+							// get jumper inputs
+							var num_an = this.responseXML.getElementsByTagName('jumpers').length;
+							for (count = 0; count < num_an; count++) {
+								document.getElementsByClassName("jumpers")[count].innerHTML =
+									this.responseXML.getElementsByTagName('jumpers')[count].childNodes[0].nodeValue;
 							}
-							else {
-								document.DL_form.DATA2.checked = false;
+
+							// get model
+							var num_an = this.responseXML.getElementsByTagName('model').length;
+							for (count = 0; count < num_an; count++) {
+								document.getElementsByClassName("model")[count].innerHTML =
+									this.responseXML.getElementsByTagName('model')[count].childNodes[0].nodeValue;
 							}
-							// DATA3
-							if (this.responseXML.getElementsByTagName('DATA')[1].childNodes[0].nodeValue === "checked") {
-								document.DL_form.DATA3.checked = true;
-							}
-							else {
-								document.DL_form.DATA3.checked = false;
-							}
-							// DATA5
-							if (this.responseXML.getElementsByTagName('DATA')[2].childNodes[0].nodeValue === "checked") {
-								document.DL_form.DATA5.checked = true;
-							}
-							else {
-								document.DL_form.DATA5.checked = false;
-							}
-							// DATA6
-							if (this.responseXML.getElementsByTagName('DATA')[3].childNodes[0].nodeValue === "checked") {
-								document.DL_form.DATA6.checked = true;
-							}
-							else {
-								document.DL_form.DATA6.checked = false;
-							}
+
 							// DATA7
 							if (this.responseXML.getElementsByTagName('DATA')[4].childNodes[0].nodeValue === "checked") {
 								document.DL_form.DATA7.checked = true;
@@ -90,30 +77,6 @@
 		// service DLs when checkbox checked/unchecked
 		function GetCheck()
 		{
-			if (DL_form.DATA2.checked) {
-				strDATA2 = "&DATA2=1";
-			}
-			else {
-				strDATA2 = "&DATA2=0";
-			}
-			if (DL_form.DATA3.checked) {
-				strDATA3 = "&DATA3=1";
-			}
-			else {
-				strDATA3 = "&DATA3=0";
-			}
-			if (DL_form.DATA5.checked) {
-				strDATA5 = "&DATA5=1";
-			}
-			else {
-				strDATA5 = "&DATA5=0";
-			}
-			if (DL_form.DATA6.checked) {
-				strDATA6 = "&DATA6=1";
-			}
-			else {
-				strDATA6 = "&DATA6=0";
-			}
 			if (DL_form.DATA7.checked) {
 				strDATA7 = "&DATA7=1";
 			}
@@ -189,14 +152,21 @@
 		<div class="IO_box">
 			<h2>Data Line Checkboxes</h2>
 			<form id="check_DLs" name="DL_form">
-				<input type="checkbox" name="DATA2"  value="0" onclick="GetCheck()" />Data 2  <br /><br />
-				<input type="checkbox" name="DATA3"  value="0" onclick="GetCheck()" />Data 3  <br /><br />
-				<input type="checkbox" name="DATA5"  value="0" onclick="GetCheck()" />Data 5  <br /><br />
-				<input type="checkbox" name="DATA6"  value="0" onclick="GetCheck()" />Data 6  <br /><br />
 				<input type="checkbox" name="DATA7"  value="0" onclick="GetCheck()" />Data 7  <br /><br />
 				<input type="checkbox" name="DATA8"  value="0" onclick="GetCheck()" />Data 8  <br /><br />
 				<input type="checkbox" name="DATA9"  value="0" onclick="GetCheck()" />Data 9  <br /><br />
 			</form>
 		</div>
+		<div class="IO_box">
+			<h2>Jumpers</h2>
+			<p>Jumper 1 (D2): <span class="jumpers">...</span></p>
+			<p>Jumper 2 (D3): <span class="jumpers">...</span></p>
+			<p>Jumper 3 (D5): <span class="jumpers">...</span></p>
+		</div>
+		<div class="IO_box">
+			<h2>Model</h2>
+			<p>Model: <span class="model">...</span></p>
+		</div>
+		
     </body>
 </html>

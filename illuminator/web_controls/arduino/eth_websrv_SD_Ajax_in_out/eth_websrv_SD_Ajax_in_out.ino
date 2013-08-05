@@ -40,26 +40,31 @@
 #define REQ_BUF_SZ   100
 
 // MAC address from Ethernet shield sticker under board
-byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };
-IPAddress ip(192, 168, 0, 155); // IP address, may need to change depending on network
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  // old MAC no POE 
+//byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0x77, 0x0B };  // POE MAC
+
+//IPAddress ip(192, 168, 0, 155); // IP address for axton
+IPAddress ip(192, 168, 1, 155); // IP address at home
+
 EthernetServer server(80);  // create a server at port 80
 File webFile;               // the web page file on the SD card
 char HTTP_req[REQ_BUF_SZ] = {0}; // buffered HTTP request stored as null terminated string
 char req_index = 0;              // index into HTTP_req buffer
 
-boolean dataLineState[2] = {0};
-char* dataLineNames[] = {"DATA8=1","DATA8=0","DATA9=1","DATA9=0"};
-int pinInArrary[]={2,3,5,6,7};
-int pinOutArrary[]={8,9};
+boolean dataLineState[8] = {0};
+char* dataLineNames[] = {"DATA46=1","DATA46=0","DATA47=1","DATA47=0","DATA48=1","DATA48=0","DATA49=1","DATA49=0","DATA50=1","DATA50=0","DATA51=1","DATA51=0","DATA52=1","DATA52=0","DATA53=1","DATA53=0"};
+char* modelName[] = {"AT-6ES","AT-12ES","AT-9EZ","M4","M5","M6","M7","M8"};
+int pinInArrary[]= {22,23,24,25,26,27,28,29};
+int pinOutArrary[]={46,47,48,49,50,51,52,53};
 
 void setup()
 {
-    // disable Ethernet chip
-    pinMode(10, OUTPUT);
-    digitalWrite(10, HIGH);
-    
+  
+    while (!Serial);
     Serial.begin(9600);       // for debugging
     
+    Serial.println(sizeof(char));
+    Serial.println(sizeof(dataLineNames)/sizeof(char));
     // initialize SD card
     Serial.println("Initializing SD card...");
     if (!SD.begin(4)) {
@@ -75,21 +80,21 @@ void setup()
     Serial.println("SUCCESS - Found index.htm file.");
   
     // set pin mode to input to read model
-    for(int i=0;i<sizeof(pinInArrary);i++){
-      pinMode(pinInArrary[i], INPUT);
+    for(int i=0;i<sizeof(pinInArrary)/sizeof(int);i++){
+      pinMode(pinInArrary[i], INPUT_PULLUP);
     }
-    
+
     // these are for illuminator control
-    for(int i=0;i<sizeof(pinOutArrary);i++){
+   for(int i=0;i<sizeof(pinOutArrary)/sizeof(int);i++){
       pinMode(pinOutArrary[i], OUTPUT);
       // set default high for control lines
       digitalWrite(pinOutArrary[i], HIGH);
     }
-  
-    
     
     Ethernet.begin(mac, ip);  // initialize Ethernet device
     server.begin();           // start to listen for clients
+    Serial.print("server is at ");
+    Serial.println(Ethernet.localIP());
 }
 
 void loop()
@@ -167,37 +172,84 @@ void loop()
 // also saves the state of the LEDs
 void SetDLs(void)
 {
-  for (int i=0;i<sizeof(pinOutArrary);i++){
-    for(int k=0; k<sizeof(dataLineNames);k++){
-      if (StrContains(HTTP_req, dataLineNames[k])) {
+  
+  for (int i=0;i<sizeof(pinOutArrary)/sizeof(int);i++){
+      if (StrContains(HTTP_req, char(pinOutArrary[i]))) {
           dataLineState[i] = 1;  // save LED state
           digitalWrite(pinOutArrary[i], LOW);
+            Serial.print("digital linename ");
+            Serial.print(" pin val ");
+            Serial.println(pinOutArrary[i]);
       }
-      else if (StrContains(HTTP_req, dataLineNames[k])) {
+      else if (StrContains(HTTP_req, "DATA"+ pinOutArrary[i] + "=0")) {
           dataLineState[i] = 0;  // save LED state
           digitalWrite(pinOutArrary[i], HIGH);
+            Serial.print("digital linename ");
+            Serial.print(" pin val ");
+            Serial.println(pinOutArrary[i]);
       }
     }
-  }
+  
+  
+/*
+      if (StrContains(HTTP_req, "DATA7=1")) {
+          dataLineState[0] = 1;  // save DL state
+          digitalWrite(7, LOW);
+      }
+      else if (StrContains(HTTP_req, "DATA7=0")) {
+          dataLineState[0] = 0;  // save DL state
+          digitalWrite(7, HIGH);
+      }
+  
+      if (StrContains(HTTP_req, "DATA8=1")) {
+          dataLineState[1] = 1;  // save DL state
+          digitalWrite(8, LOW);
+      }
+      else if (StrContains(HTTP_req, "DATA8=0")) {
+          dataLineState[1] = 0;  
+          digitalWrite(8, HIGH);
+      }
+      if (StrContains(HTTP_req, "DATA9=1")) {
+          dataLineState[2] = 1;  
+          digitalWrite(9, LOW);
+      }
+      else if (StrContains(HTTP_req, "DATA9=0")) {
+          dataLineState[2] = 0; 
+          digitalWrite(9, HIGH);
+      }
+  */
 }
 
 // send the XML file DATA status
 void XML_response(EthernetClient cl)
 {
+    int modelNumber = 0;
     cl.print("<?xml version = \"1.0\" ?>");
     cl.print("<inputs>");
 
     // read inputs
     for (int i = 0; i < sizeof(pinInArrary); i++) {
-        cl.print("<switch>");
+        cl.print("<jumpers>");
         if (digitalRead(pinInArrary[i])) {
             cl.print("ON");
         }
         else {
             cl.print("OFF");
         }
-        cl.println("</switch>");
+        cl.println("</jumpers>");
     }
+
+    cl.print("<model>");
+    for (int i = 0; i < sizeof(pinInArrary); i++) {
+        if (digitalRead(pinInArrary[i])) {
+          modelNumber = modelNumber + 1;
+        }
+    }
+    cl.print(modelName[modelNumber]);
+    Serial.println(modelName[modelNumber]);
+    Serial.println(modelNumber);
+    
+    cl.println("</model>");
 
     // checkbox DATA states
     for (int i = 0; i < sizeof(dataLineState); i++){
