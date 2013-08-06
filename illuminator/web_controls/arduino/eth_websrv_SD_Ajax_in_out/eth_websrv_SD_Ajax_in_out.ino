@@ -52,7 +52,7 @@ char HTTP_req[REQ_BUF_SZ] = {0}; // buffered HTTP request stored as null termina
 char req_index = 0;              // index into HTTP_req buffer
 
 boolean dataLineState[8] = {0};
-char* dataLineNames[] = {"DATA46=1","DATA46=0","DATA47=1","DATA47=0","DATA48=1","DATA48=0","DATA49=1","DATA49=0","DATA50=1","DATA50=0","DATA51=1","DATA51=0","DATA52=1","DATA52=0","DATA53=1","DATA53=0"};
+char* dataLineNames[] = {"DATA46=1","DATA46=0"}; //,"DATA47=1","DATA47=0","DATA48=1","DATA48=0","DATA49=1","DATA49=0","DATA50=1","DATA50=0","DATA51=1","DATA51=0","DATA52=1","DATA52=0","DATA53=1","DATA53=0"};
 char* modelName[] = {"AT-6ES","AT-12ES","AT-9EZ","M4","M5","M6","M7","M8"};
 int pinInArrary[]= {22,23,24,25,26,27,28,29};
 int pinOutArrary[]={46,47,48,49,50,51,52,53};
@@ -60,11 +60,14 @@ int pinOutArrary[]={46,47,48,49,50,51,52,53};
 void setup()
 {
   
+      // disable Ethernet chip
+    pinMode(10, OUTPUT);
+    digitalWrite(10, HIGH);
+    
+  
     while (!Serial);
     Serial.begin(9600);       // for debugging
     
-    Serial.println(sizeof(char));
-    Serial.println(sizeof(dataLineNames)/sizeof(char));
     // initialize SD card
     Serial.println("Initializing SD card...");
     if (!SD.begin(4)) {
@@ -78,8 +81,19 @@ void setup()
         return;  // can't find index file
     }
     Serial.println("SUCCESS - Found index.htm file.");
+    
+   // initPins(); 
   
-    // set pin mode to input to read model
+    
+    Ethernet.begin(mac,ip);  // initialize Ethernet device
+    server.begin();           // start to listen for clients
+    Serial.print("server is at ");
+    Serial.println(Ethernet.localIP());
+}
+
+void initPins()
+{
+      // set pin mode to input to read model
     for(int i=0;i<sizeof(pinInArrary)/sizeof(int);i++){
       pinMode(pinInArrary[i], INPUT_PULLUP);
     }
@@ -90,11 +104,7 @@ void setup()
       // set default high for control lines
       digitalWrite(pinOutArrary[i], HIGH);
     }
-    
-    Ethernet.begin(mac, ip);  // initialize Ethernet device
-    server.begin();           // start to listen for clients
-    Serial.print("server is at ");
-    Serial.println(Ethernet.localIP());
+
 }
 
 void loop()
@@ -174,14 +184,14 @@ void SetDLs(void)
 {
   
   for (int i=0;i<sizeof(pinOutArrary)/sizeof(int);i++){
-      if (StrContains(HTTP_req, char(pinOutArrary[i]))) {
+      if (StrContains(HTTP_req, "DATA1=1")) {
           dataLineState[i] = 1;  // save LED state
           digitalWrite(pinOutArrary[i], LOW);
             Serial.print("digital linename ");
             Serial.print(" pin val ");
             Serial.println(pinOutArrary[i]);
       }
-      else if (StrContains(HTTP_req, "DATA"+ pinOutArrary[i] + "=0")) {
+      else if (StrContains(HTTP_req, "DATA1=0")) {
           dataLineState[i] = 0;  // save LED state
           digitalWrite(pinOutArrary[i], HIGH);
             Serial.print("digital linename ");
