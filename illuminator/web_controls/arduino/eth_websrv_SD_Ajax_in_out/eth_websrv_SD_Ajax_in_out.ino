@@ -1,91 +1,57 @@
 /*--------------------------------------------------------------
-  Program:      eth_websrv_SD_Ajax_in_out
-
-  Description:  Arduino web server that displays 4 analog inputs,
-                the state of 3 switches and controls 4 outputs,
-                2 using checkboxes and 2 using buttons.
-                The web page is stored on the micro SD card.
-  
-  Hardware:     Arduino Uno and official Arduino Ethernet
-                shield. Should work with other Arduinos and
-                compatible Ethernet shields.
-                2Gb micro SD card formatted FAT16.
-                A2 to A4 analog inputs, pins 2, 3 and 5 for
-                the switches, pins 6 to 9 as outputs (LEDs).
-                
-  Software:     Developed using Arduino 1.0.5 software
-                Should be compatible with Arduino 1.0 +
-                SD card contains web page called index.htm
-  
-  References:   - WebServer example by David A. Mellis and 
-                  modified by Tom Igoe
-                - SD card examples by David A. Mellis and
-                  Tom Igoe
-                - Ethernet library documentation:
-                  http://arduino.cc/en/Reference/Ethernet
-                - SD Card library documentation:
-                  http://arduino.cc/en/Reference/SD
-
-  Date:         4 April 2013
-  Modified:     19 June 2013
-                - removed use of the String class
  
-  Author:       W.A. Smith, http://startingelectronics.com
 --------------------------------------------------------------*/
-
+#include <SD.h>
 #include <SPI.h>
 #include <Ethernet.h>
-#include <SD.h>
-// size of buffer used to capture HTTP requests
 #define REQ_BUF_SZ   100
 
+File logoImage;
 // MAC address from Ethernet shield sticker under board
-byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  // old MAC no POE 
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  //  no POE 
 //byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0x77, 0x0B };  // POE MAC
 
-//IPAddress ip(192, 168, 0, 155); // IP address for axton
-IPAddress ip(192, 168, 1, 155); // IP address at home
+IPAddress ip(192, 168, 1, 144); // IP address at home
+IPAddress gateway(192, 168, 1, 100);
+//IPAddress ip(10, 1, 1, 125); // IP address at home
+//IPAddress gateway(10,1,1,254);
+
 
 EthernetServer server(80);  // create a server at port 80
-File webFile;               // the web page file on the SD card
 char HTTP_req[REQ_BUF_SZ] = {0}; // buffered HTTP request stored as null terminated string
 char req_index = 0;              // index into HTTP_req buffer
 
-boolean dataLineState[8] = {0};
-char* dataLineNames[] = {"DATA46=1","DATA46=0"}; //,"DATA47=1","DATA47=0","DATA48=1","DATA48=0","DATA49=1","DATA49=0","DATA50=1","DATA50=0","DATA51=1","DATA51=0","DATA52=1","DATA52=0","DATA53=1","DATA53=0"};
+String powerState       = "off";
+String degree10State    = "off";
+String degree30State    = "off";
+String degree45State    = "off";
+String degree60State    = "off";
+String degree130State   = "off";
+
+
 char* modelName[] = {"AT-6ES","AT-12ES","AT-9EZ","M4","M5","M6","M7","M8"};
-int pinInArrary[]= {22,23,24,25,26,27,28,29};
-int pinOutArrary[]={46,47,48,49,50,51,52,53};
+
+int pinInArrary[]= {}; 
+int pinOutArrary[]={30,32,34,36,38,40,42,44}; 
+int degree10  = 30;
+int degree30  = 32;
+int degree45  = 34;
+int degree60  = 36;
+int degree130 = 38;
+
+
+
 
 void setup()
 {
   
-      // disable Ethernet chip
-    pinMode(10, OUTPUT);
-    digitalWrite(10, HIGH);
-    
-  
     while (!Serial);
     Serial.begin(9600);       // for debugging
     
-    // initialize SD card
-    Serial.println("Initializing SD card...");
-    if (!SD.begin(4)) {
-        Serial.println("ERROR - SD card initialization failed!");
-        return;    // init failed
-    }
-    Serial.println("SUCCESS - SD card initialized.");
-    // check for index.htm file
-    if (!SD.exists("index.htm")) {
-        Serial.println("ERROR - Can't find index.htm file!");
-        return;  // can't find index file
-    }
-    Serial.println("SUCCESS - Found index.htm file.");
-    
-   // initPins(); 
+    initPins(); 
   
-    
-    Ethernet.begin(mac,ip);  // initialize Ethernet device
+    Serial.println("init ethernet");
+    Ethernet.begin(mac,ip,gateway);  // initialize Ethernet device
     server.begin();           // start to listen for clients
     Serial.print("server is at ");
     Serial.println(Ethernet.localIP());
@@ -95,7 +61,8 @@ void initPins()
 {
       // set pin mode to input to read model
     for(int i=0;i<sizeof(pinInArrary)/sizeof(int);i++){
-      pinMode(pinInArrary[i], INPUT_PULLUP);
+      //pinMode(pinInArrary[i], INPUT_PULLUP);
+      pinMode(pinInArrary[i], INPUT);
     }
 
     // these are for illuminator control
@@ -107,11 +74,44 @@ void initPins()
 
 }
 
+void powerOff(){
+  powerState="off";
+}
+void powerOn(){
+  powerState="on";
+}
+
+void turnDLOn(int _dl){
+  digitalWrite(_dl, HIGH);
+}
+void turnDLOff(int _dl){
+  digitalWrite(_dl, LOW);
+}
+
+void turnDLsOff(){
+   for(int i=0;i<sizeof(pinOutArrary)/sizeof(int);i++){
+      // set default high for control lines
+      //digitalWrite(pinOutArrary[i], HIGH);
+      turnDLOff(pinOutArrary[i]);
+      degree10State ="off";
+      degree30State ="off";
+      degree45State ="off";
+      degree60State ="off";
+      degree130State="off";
+    }
+}
+
+
+
+
 void loop()
 {
     EthernetClient client = server.available();  // try to get client
+    //Serial.println(" try to get client");
+    
 
     if (client) {  // got client?
+        //debugOut("got client");
         boolean currentLineIsBlank = true;
         while (client.connected()) {
             if (client.available()) {   // client data available to read
@@ -138,6 +138,7 @@ void loop()
                         client.println();
                         SetDLs();
                         // send XML file containing input states
+                        Serial.println("calling xml response");
                         XML_response(client);
                     }
                     else {  // web page request
@@ -146,13 +147,8 @@ void loop()
                         client.println("Connection: keep-alive");
                         client.println();
                         // send web page
-                        webFile = SD.open("index.htm");        // open web page file
-                        if (webFile) {
-                            while(webFile.available()) {
-                                client.write(webFile.read()); // send web page to client
-                            }
-                            webFile.close();
-                        }
+                        Serial.println("send web page");
+                        printWebPage(client);
                     }
                     // display received HTTP request on serial port
                     Serial.print(HTTP_req);
@@ -173,7 +169,7 @@ void loop()
                 }
             } // end if (client.available())
         } // end while (client.connected())
-        delay(1);      // give the web browser time to receive the data
+        delay(20);      // give the web browser time to receive the data
         client.stop(); // close the connection
     } // end if (client)
 }
@@ -182,97 +178,94 @@ void loop()
 // also saves the state of the LEDs
 void SetDLs(void)
 {
-  
-  for (int i=0;i<sizeof(pinOutArrary)/sizeof(int);i++){
-      if (StrContains(HTTP_req, "DATA1=1")) {
-          dataLineState[i] = 1;  // save LED state
-          digitalWrite(pinOutArrary[i], LOW);
-            Serial.print("digital linename ");
-            Serial.print(" pin val ");
-            Serial.println(pinOutArrary[i]);
-      }
-      else if (StrContains(HTTP_req, "DATA1=0")) {
-          dataLineState[i] = 0;  // save LED state
-          digitalWrite(pinOutArrary[i], HIGH);
-            Serial.print("digital linename ");
-            Serial.print(" pin val ");
-            Serial.println(pinOutArrary[i]);
-      }
+  Serial.println(HTTP_req);
+  if (StrContains(HTTP_req, "power=0")){
+    turnDLsOff();
+    powerOff();
+    return;
+  }else if (StrContains(HTTP_req, "power=1") || powerState=="on" ) {
+    powerOn();
+    if (StrContains(HTTP_req      , "degree10=1")){
+      turnDLsOff();  //to make DLs exclusive
+      //turn 10 degree on
+      turnDLOn(degree10);
+      degree10State="on";
+    } else if(StrContains(HTTP_req, "degree10=0")){
+      turnDLOff(degree10);
+      degree10State="off";
+    } else if(StrContains(HTTP_req, "degree30=1")){
+      turnDLsOff();  //to make DLs exclusive
+      //turn 30 on
+      turnDLOn(degree30);
+      degree30State="on";
+    }else if(StrContains(HTTP_req, "degree30=0")){
+      turnDLOff(degree30);
+      degree30State="off";
+    }else if(StrContains(HTTP_req, "degree45=1")){
+      turnDLsOff();  //to make DLs exclusive
+      //turn 45 degree on
+      turnDLOn(degree45);
+      degree45State="on";
+    } else if(StrContains(HTTP_req, "degree45=0")){
+      turnDLOff(degree45);
+      degree45State="off";
+    } else if(StrContains(HTTP_req, "degree60=1")){
+      turnDLsOff();  //to make DLs exclusive
+      //turn 60 on
+      turnDLOn(degree60);
+      degree60State="on";
+    } else if (StrContains(HTTP_req, "degree60=0")){
+      turnDLOff(degree60);
+      degree60State="off";
+    } else if(StrContains(HTTP_req, "degree130=1")){
+      turnDLsOff();  //to make DLs exclusive
+      //turn 130 on
+      turnDLOn(degree130);
+      degree130State="on";
+    } else if(StrContains(HTTP_req, "degree130=0")){
+      turnDLOff(degree130);
+      degree130State="off";
     }
-  
-  
-/*
-      if (StrContains(HTTP_req, "DATA7=1")) {
-          dataLineState[0] = 1;  // save DL state
-          digitalWrite(7, LOW);
-      }
-      else if (StrContains(HTTP_req, "DATA7=0")) {
-          dataLineState[0] = 0;  // save DL state
-          digitalWrite(7, HIGH);
-      }
-  
-      if (StrContains(HTTP_req, "DATA8=1")) {
-          dataLineState[1] = 1;  // save DL state
-          digitalWrite(8, LOW);
-      }
-      else if (StrContains(HTTP_req, "DATA8=0")) {
-          dataLineState[1] = 0;  
-          digitalWrite(8, HIGH);
-      }
-      if (StrContains(HTTP_req, "DATA9=1")) {
-          dataLineState[2] = 1;  
-          digitalWrite(9, LOW);
-      }
-      else if (StrContains(HTTP_req, "DATA9=0")) {
-          dataLineState[2] = 0; 
-          digitalWrite(9, HIGH);
-      }
-  */
+
+  }
 }
 
 // send the XML file DATA status
 void XML_response(EthernetClient cl)
 {
     int modelNumber = 0;
-    cl.print("<?xml version = \"1.0\" ?>");
-    cl.print("<inputs>");
-
-    // read inputs
-    for (int i = 0; i < sizeof(pinInArrary); i++) {
-        cl.print("<jumpers>");
-        if (digitalRead(pinInArrary[i])) {
-            cl.print("ON");
-        }
-        else {
-            cl.print("OFF");
-        }
-        cl.println("</jumpers>");
-    }
-
-    cl.print("<model>");
-    for (int i = 0; i < sizeof(pinInArrary); i++) {
-        if (digitalRead(pinInArrary[i])) {
-          modelNumber = modelNumber + 1;
-        }
-    }
-    cl.print(modelName[modelNumber]);
-    Serial.println(modelName[modelNumber]);
-    Serial.println(modelNumber);
     
-    cl.println("</model>");
+    Serial.println("XML_response");
+    Serial.print("powerState ");
+    Serial.println(powerState);
+    cl.println("<?xml version = \"1.0\" ?>");
+    cl.println("<outputs>");
 
-    // checkbox DATA states
-    for (int i = 0; i < sizeof(dataLineState); i++){
-        cl.print("<DATA>");
-        if (dataLineState[i]) {
-            cl.print("checked");
-        }
-        else {
-            cl.print("unchecked");
-        }
-        cl.println("</DATA>");
-    }
-    cl.print("</inputs>");
+    cl.print("<power>");
+      cl.print(powerState);
+    cl.println("</power>");
+
+    cl.print("<degree10>");
+      cl.print(degree10State);
+    cl.println("</degree10>");
+
+    cl.print("<degree30>");
+      cl.print(degree30State);
+    cl.println("</degree30>");
+ 
+    cl.print("<degree45>");
+      cl.print(degree45State);
+    cl.println("</degree45>");
+ 
+    cl.print("<degree60>");
+      cl.print(degree60State);
+    cl.println("</degree60>");
+    
+    cl.print("<degree130>");
+      cl.print(degree130State);
+    cl.println("</degree130>");
+    
+    cl.println("</outputs>");
 }
 
 // sets every element of str to 0 (clears array)
