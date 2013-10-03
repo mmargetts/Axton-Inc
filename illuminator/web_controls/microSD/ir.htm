@@ -126,9 +126,6 @@
 
 	<style>
 		.IO_box {
-			position:fixed;
-			left:800px;
-			top:300px;
 			float: left;
 			margin: 0 20px 20px 0;
 			border: 1px solid blue;
@@ -153,16 +150,33 @@
 			font-size: 70%;
 			color: #737373;
 		}
+		
+		#ButtonGR{
+	   background-color:green;
+	   color:black;
+	  }
+    #ButtonGR{
+	   background-color:red;
+	   color:white;
+	  }
+    .clickable{
+	   cursor:hand;
+	  }
 	</style>
-    </head>
-    <img style="position:relative;left:735px;top:150px" src="logo.png">
+    </head><h1>
+  <img  src="logo.png"></h1>
     <body onload="GetArduinoIO()">
 		<div class="IO_box" >
-			<h2>Illumination Control</h2>
-				<button type="button" class="degree" id="degree10"  onclick="GetButton()"  >Zoom 10  Degrees Off  </button><br /><br />
-				<button type="button" class="degree" id="degree45"  onclick="GetButton()"  >Zoom 45  Degrees Off  </button><br /><br />
-				<button type="button" class="degree" id="degree130" onclick="GetButton()"  >Zoom 130 Degrees Off  </button><br /><br />
-				<button type="button" class="power"  id="power"     onclick="GetButton()"  >Power Off             </button><br /><br />
+			<h2>Illumination Control        </h2>
+				<button type="button" class="degree" id="degree10"    onclick="GetButton()"  >Zoom 10&deg  Off </button><br></br>
+				<button type="button" class="degree" id="degree45"    onclick="GetButton()"  >Zoom 45&deg  Off </button><br></br>
+				<button type="button" class="degree" id="degree130"   onclick="GetButton()"  >Zoom 130&deg Off </button><br></br>
+				<button type="button" class="power"  id="power"       onclick="GetButton()"  >Power Off        </button><br></br>
+		</div>
+		<div class="IO_box" >
+			<h2>Hybrid Control </h2>
+			<button type="button" class="degree" id="whiteLight"  onclick="GetButton()"  >White light Off  </button><br></br>
+			<button type="button" class="degree" id="irLight"     onclick="GetButton()"  >IR  Off          </button><br></br>
 		</div>
     </body>
 </html>
