@@ -10,6 +10,9 @@ File logoImage;
 // MAC address from Ethernet shield sticker under board
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  //  No POE----But assigned to poe unit at axton 
 //byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0x77, 0x0B };  // POE MAC
+//byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0x77, 0x27 };  // POE MAC
+
+
 
 IPAddress ip(192, 168, 1, 136); // IP address at home
 IPAddress gateway(192, 168, 1, 128);

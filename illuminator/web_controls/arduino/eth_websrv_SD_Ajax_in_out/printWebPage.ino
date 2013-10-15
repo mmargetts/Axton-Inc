@@ -17,6 +17,7 @@ void printWebPage(EthernetClient cl){
   cl.println("          _power_state      = 0;");
   cl.println("          _whiteLight_state = 0;");
   cl.println("          _irLight_state    = 0;");
+
   cl.println("          function XMLToString(oXML) {   ");
   cl.println("              if (window.ActiveXObject) {     ");
   cl.println("                  return oXML.xml;  //if IE ");
@@ -170,7 +171,7 @@ void printWebPage(EthernetClient cl){
   cl.println("        			}");
   cl.println("                  }");
   cl.println("	      </script>");
-  cl.println("");
+
   cl.println("	<style>");
   cl.println("		.IO_box {");
   cl.println("			float  : left;");
@@ -197,12 +198,21 @@ void printWebPage(EthernetClient cl){
   cl.println("			font-size: 70%;");
   cl.println("			color: #737373;");
   cl.println("		}");
+  cl.println("          .powerRed{");
+  cl.println("	            background-color:red;");
+  cl.println("	            color:white;");
+  cl.println("	        }");
+  cl.println("          .powerGreen{");
+  cl.println("	            background-color:green;");
+  cl.println("	            color:white;");
+  cl.println("	        }");
   cl.println("	</style>");
   cl.println("    </head>");
 
   SD.begin(4);  
-  if (SD.exists("logo.png")) {
-    cl.println("<img style='position:relative;left:735px;top:150px' src='data:image/png;base64,");
+  if (SD.exists("logo.raw")) {
+//    cl.println("<img style='position:relative;left:735px;top:150px' src='data:image/png;base64,");
+    cl.println("<img style='float:left' src='data:image/png;base64,");
                         logoImage = SD.open("logo.raw");        // open web page file
                         Serial.println("found logo file");
                         if (logoImage) {
