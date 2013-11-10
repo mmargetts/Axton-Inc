@@ -1,12 +1,10 @@
 /*--------------------------------------------------------------
  
 --------------------------------------------------------------*/
-#include <SD.h>
 #include <SPI.h>
 #include <Ethernet.h>
 #define REQ_BUF_SZ   100
 
-File logoImage;
 // MAC address from Ethernet shield sticker under board
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  //  No POE----But assigned to poe unit at axton 
 //byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0x77, 0x0B };  // POE MAC
@@ -14,8 +12,7 @@ byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xC6, 0xFC };  //  No POE----But assigned
 
 
 
-IPAddress ip(192, 168, 1, 136); // IP address at home
-IPAddress gateway(192, 168, 1, 128);
+IPAddress ip(192, 168, 1, 103); // IP address at home
 //IPAddress ip(10, 1, 1, 125); // IP address at home
 //IPAddress gateway(10,1,1,254);
 
@@ -32,12 +29,19 @@ void setup()
     Serial.begin(9600);       // for debugging
     
     initPins(); 
+
+  Serial.println("Starting w5100");
+  if(!Ethernet.begin(mac)) {
+    Serial.println("DHCP fail");
+    Serial.println("Using default IP 192.168.1.103");
+    Ethernet.begin(mac,ip);
+  }else Serial.println(Ethernet.localIP());
   
-    Serial.println("init ethernet");
-    Ethernet.begin(mac);  // initialize Ethernet device
+//    Serial.println("init ethernet");
+//    Ethernet.begin(mac);  // initialize Ethernet device
     server.begin();           // start to listen for clients
-    Serial.print("server is at ");
-    Serial.println(Ethernet.localIP());
+//    Serial.print("server is at ");
+//    Serial.println(Ethernet.localIP());
 }
 
 
@@ -71,6 +75,7 @@ void loop()
                         // send rest of HTTP header
                         client.println("Content-Type: text/xml");
                         client.println("Connection: keep-alive");
+                        client.println("Access-Control-Allow-Origin: http://axtontech.com");
                         client.println();
                         SetDLs();
                         // send XML file containing input states
@@ -81,10 +86,12 @@ void loop()
                         // send rest of HTTP header
                         client.println("Content-Type: text/html");
                         client.println("Connection: keep-alive");
+                        client.println("Access-Control-Allow-Origin: http://axtontech.com");
                         client.println();
                         // send web page
                         Serial.println("send web page");
-                        printWebPage(client);
+                        //printWebPage(client);
+                        ui_v1(client);
                     }
                     // display received HTTP request on serial port
                     Serial.print(HTTP_req);

@@ -1,182 +1,240 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>AxtonTech Illumnate the Night</title>
-        <script>
-      		_degree10  = "";
-      		_degree45  = "";
-      		_degree130 = "";
-          _power     = "";
-          
-          _degree10_state  = 0;
-          _degree45_state  = 0;
-          _degree130_state = 0;
-          _power_state     = 0;
-          function XMLToString(oXML) {   
-              if (window.ActiveXObject) {     
-                  return oXML.xml;  //if IE 
-              } else {     
-                  return (new XMLSerializer()).serializeToString(oXML);   //other browsers
-              } 
-          }
-      		function GetArduinoIO()
-      		{
-      			nocache = "&nocache=" + Math.random() * 1000000;
-      			var request = new XMLHttpRequest();
-      			request.onreadystatechange = function()
-      			{
-      				if (this.readyState == 4) {
-      					if(this.status == 200) {
-      						if (this.responseXML != null) {
-      							//alert(XMLToString(this.responseXML));
-                      //alert(this.responseXML.documentElement.getElementsByTagName('power'));
-                      //alert(this.responseXML.getElementsByTagName('power')[0].childNodes[0].nodeValue);
-         							if (this.responseXML.getElementsByTagName('power')[0].childNodes[0].nodeValue === "off") {
-      								document.getElementById('power').innerHTML = "Power Off";
-      								_power_state     = 0;
-      								_degree10_state  = 0;
-      								_degree45_state  = 0;
-      								_degree130_state = 0;
-      							}else{
-      								  _power_state = 1;
-      								  document.getElementById("power").innerHTML = "Power On";
-          							if (this.responseXML.getElementsByTagName('degree10')[0].childNodes[0].nodeValue === "on") {
-          								document.getElementById("degree10").innerHTML = "Zoom 10 Degrees On";
-          								_degree10_state = 1;
-          							}
-          							else {
-          								document.getElementById("degree10").innerHTML = "Zoom 10 Degrees Off";
-          								_degree10_state = 0;
-          							}
-          							if (this.responseXML.getElementsByTagName('degree45')[0].childNodes[0].nodeValue === "on") {
-          								document.getElementById("degree45").innerHTML = "Zoom 45 Degrees On";
-          								_degree45_state = 1;
-          							}
-          							else {
-          								document.getElementById("degree45").innerHTML = "Zoom 45 Degrees Off";
-          								_degree45_state = 0;
-          							}
-          							if (this.responseXML.getElementsByTagName('degree130')[0].childNodes[0].nodeValue === "on") {
-          								document.getElementById("degree130").innerHTML = "Zoom 130 Degrees On";
-          								_degree130_state = 1;
-          							}
-          							else {
-          								document.getElementById("degree130").innerHTML = "Zoom 130 Degrees Off";
-          								_degree130_state = 0;
-          							}
-      						  }
-      
-      						}
-      					}
-      				}
-      			}
-      			// send HTTP GET request with LEDs to switch on/off if any
-      			request.open("GET", "ajax_inputs" + _degree10 + _degree45 + _degree130 + _power + nocache, true);
-      			request.send(null);
-      			setTimeout('GetArduinoIO()', 1000);
-        		_degree10  = "";
-      	  	_degree45  = "";
-      		  _degree130 = "";
-            _power     = "";
-      
-      		}
-      
-      		function GetButton()
-      		{
-      			if (_power_state === 0) {
-      				_power_state     = 1;
-      				_degree10_state  = 1;
-      				_degree45_state  = 1;
-      				_degree130_state = 1;
-      				_power       = "&power=1";
-      				_degree10    = "&degree10=1";
-      				_degree45    = "&degree45=1";
-      				_degree130   = "&degree130=1";
-      			}else {
-      				_power_state = 1;
-      				_power       = "&power=0";
-      				
-        			if (_degree10_state === 1) {
-        				_degree10_state = 0;
-        				_degree10 = "&degree10=0";
-        			}
-        			else {
-        				_degree10_state = 1;
-        				_degree10 = "&degree10=1";
-        			}
-        			if (_degree45_state === 1) {
-        				_degree45_state = 0;
-        				_degree45 = "&degree45=0";
-        			}
-        			else {
-        				_degree45_state = 1;
-        				_degree45 = "&degree45=1";
-        			}
-        			if (_degree130_state === 1) {
-        				_degree130_state = 0;
-        				_degree130 = "&degree130=0";
-        			}
-        			else {
-        				_degree130_state = 1;
-        				_degree130 = "&degree130=1";
-        			}
-      		  }
-      		}
-	      </script>
+  <!DOCTYPE html> 
+  <html>
+      <head>
+          <title>AxtonTech Illumnate the Night</title>
+          <script>
+            _degree10        = '';
+        	_degree45        = '';
+        	_degree130       = '';
+            _power           = '';
+            _whiteLight      = '';
+            _irLight         = '';
 
-	<style>
-		.IO_box {
-			float: left;
-			margin: 0 20px 20px 0;
-			border: 1px solid blue;
-			padding: 0 5px 0 5px;
-			width: 180px;
-		}
-		h1 {
-			font-size: 120%;
-			color: blue;
-			margin: 0 0 10px 0;
-		}
-		h2 {
-			font-size: 85%;
-			color: #5734E6;
-			margin: 5px 0 5px 0;
-		}
-		p, form, button {
-			font-size: 80%;
-			color: #252525;
-		}
-		.small_text {
-			font-size: 70%;
-			color: #737373;
-		}
-		
-		#ButtonGR{
-	   background-color:green;
-	   color:black;
-	  }
-    #powerRed{
-	   background-color:red;
-	   color:white;
-	  }
-    .clickable{
-	   cursor:hand;
-	  }
-	</style>
-    </head><h1>
-  <img  src="logo.png"></h1>
-    <body onload="GetArduinoIO()">
-		<div class="IO_box" >
-			<h2>Illumination Control        </h2>
-				<button type="button" class="degree" id="degree10"    onclick="GetButton()"  >Zoom 10&deg  Off </button><br></br>
-				<button type="button" class="degree" id="degree45"    onclick="GetButton()"  >Zoom 45&deg  Off </button><br></br>
-				<button type="button" class="degree" id="degree130"   onclick="GetButton()"  >Zoom 130&deg Off </button><br></br>
-				<button type="button" class="power"  id="powerRed"       onclick="GetButton()"  >Power Off        </button><br></br>
-		</div>
-		<div class="IO_box" >
-			<h2>Hybrid Control </h2>
-			<button type="button" class="degree" id="whiteLight"  onclick="GetButton()"  >White light Off  </button><br></br>
-			<button type="button" class="degree" id="irLight"     onclick="GetButton()"  >IR  Off          </button><br></br>
-		</div>
-    </body>
-</html>
+            _degree10_state   = 0;
+            _degree45_state   = 0;
+            _degree130_state  = 0;
+            _power_state      = 0;
+            _whiteLight_state = 0;
+            _irLight_state    = 0;
+
+            function XMLToString(oXML) {   
+                if (window.ActiveXObject) {     
+                    return oXML.xml;  //if IE 
+                } else {     
+                    return (new XMLSerializer()).serializeToString(oXML);   //other browsers
+                } 
+            }
+        		function GetArduinoIO()
+        		{
+        			nocache = '&nocache=' + Math.random() * 1000000;
+        			var request = new XMLHttpRequest();
+        			request.onreadystatechange = function()
+        			{
+        				if (this.readyState == 4) {
+        					if(this.status == 200) {
+        						if (this.responseXML != null) {
+           							if (this.responseXML.getElementsByTagName('power')[0].childNodes[0].nodeValue === 'off') {
+        								_power_state      = 0;
+        								_degree10_state   = 0;
+        								_degree45_state   = 0;
+        								_degree130_state  = 0;
+        								_whiteLight_state = 0;
+        								_irLight_state    = 0;
+            						        document.getElementById('degree10'  ).innerHTML = 'Zoom 10&deg Off';
+            							document.getElementById('degree45'  ).innerHTML = 'Zoom 30&deg Off';
+            							document.getElementById('degree130' ).innerHTML = 'Zoom 60&deg Off';
+        								document.getElementById('power'     ).innerHTML = 'Power Off';
+        								document.getElementById('whiteLight').innerHTML = 'White Light Off';
+        								document.getElementById('irLight'   ).innerHTML = 'IR Off';
+        							}else{
+        								  _power_state = 1;
+        								  document.getElementById('power').innerHTML = 'Power On';
+            							if (this.responseXML.getElementsByTagName('degree10')[0].childNodes[0].nodeValue === 'on') {
+            								document.getElementById('degree10').innerHTML = 'Zoom 10&deg On';
+            								_degree10_state = 1;
+            							}
+            							else {
+            								document.getElementById('degree10').innerHTML = 'Zoom 10&deg Off';
+            								_degree10_state = 0;
+            							}
+            							if (this.responseXML.getElementsByTagName('degree45')[0].childNodes[0].nodeValue === 'on') {
+            								document.getElementById('degree45').innerHTML = 'Zoom 30&deg On';
+            								_degree45_state = 1;
+            							}
+            							else {
+            								document.getElementById('degree45').innerHTML = 'Zoom 30&deg Off';
+            								_degree45_state = 0;
+            							}
+            							if (this.responseXML.getElementsByTagName('degree130')[0].childNodes[0].nodeValue === 'on') {
+            								document.getElementById('degree130').innerHTML = 'Zoom 60&deg On';
+            								_degree130_state = 1;
+            							}
+            							else {
+            								document.getElementById('degree130').innerHTML = 'Zoom 60&deg Off';
+            								_degree130_state = 0;
+            							}
+            							if (this.responseXML.getElementsByTagName('whiteLight')[0].childNodes[0].nodeValue === 'on') {
+            								document.getElementById('whiteLight').innerHTML = 'White Light On';
+            								_whiteLight_state = 1;
+            							}
+            							else {
+            								document.getElementById('whiteLight').innerHTML = 'White Light Off';
+            								_whiteLight_state = 0;
+            							}
+            							if (this.responseXML.getElementsByTagName('irLight')[0].childNodes[0].nodeValue === 'on') {
+            								document.getElementById('irLight').innerHTML = 'IR On';
+            								_irLight_state = 1;
+            							}
+            							else {
+            								document.getElementById('irLight').innerHTML = 'IR Off';
+            								_irLight_state = 0;
+            							}
+        						        }
+        
+        						}
+        					}
+        				}
+        			}
+        			// send HTTP GET request with LEDs to switch on/off if any
+        			request.open('GET', 'ajax_inputs' + _degree10 + _degree45 + _degree130 + _power + _whiteLight + _irLight + nocache, true);
+        			request.send(null);
+        			setTimeout('GetArduinoIO()', 1000);
+          		        _degree10    = '';
+        	  	        _degree45    = '';
+        		        _degree130   = '';
+                            _power       = '';
+                            _whiteLight  = '';
+                            _irLight     = '';
+        
+        		}
+        
+        		function GetButtonPower()
+        		{
+          			if (_power_state === 1) {
+          				_power_state = 0;
+          				_power = '&power=0';
+          			}
+          			else {
+          				_power_state = 1;
+          				_power = '&power=1';
+          			}
+        		}
+                    function GetButton10(){
+          			if (_degree10_state === 1) {
+          				_degree10_state = 0;
+          				_degree10 = '&degree10=0';
+          			}
+          			else {
+          				_degree10_state = 1;
+          				_degree10 = '&degree10=1';
+          			}
+                    }
+                    function GetButton45(){
+          			if (_degree45_state === 1) {
+          				_degree45_state = 0;
+          				_degree45 = '&degree45=0';
+          			}
+          			else {
+          				_degree45_state = 1;
+          				_degree45 = '&degree45=1';
+          			}
+                    }
+                    function GetButton130(){
+          			if (_degree130_state === 1) {
+          				_degree130_state = 0;
+          				_degree130 = '&degree130=0';
+          			}
+          			else {
+          				_degree130_state = 1;
+          				_degree130 = '&degree130=1';
+          			}
+                    }
+                    function GetButtonWhiteLight(){
+          			if (_whiteLight_state === 1) {
+          				_whiteLight_state = 0;
+          				_whiteLight = '&whiteLight=0';
+          			}
+          			else {
+          				_whiteLight_state = 1;
+          				_whiteLight = '&whiteLight=1';
+          			}
+                    }
+                    function GetButtonIRLight(){
+          			if (_irLight_state === 1) {
+          				_irLight_state = 0;
+          				_irLight = '&irLight=0';
+          			}
+          			else {
+          				_irLight_state = 1;
+          				_irLight = '&irLight=1';
+          			}
+                    }
+  	      </script>
+
+  	<style>
+  		.IO_box {
+  			align  : left;
+  			margin : 0 10px 25px 0;
+  			border : 1px solid #73bc43;
+  			padding: 0 5px 0 5px;
+  			width  : 180px;
+  		}
+  		.h1 {
+  			font-family: arial, sans-serif;font-size: 120%; 
+  			color: #73bc43;
+  			margin: 0 0 10px 0;
+  		}
+  		.h2 {
+  			font-family: arial, sans-serif;font-size: 85%;
+  			color: #73bc43;
+  			margin: 5px 0 5px 0;
+  		}
+  		p, form, button {
+  			font-size: 80%;
+  			color: #252525;
+  			
+  			
+  		}
+  		.small_text {
+  			font-size: 70%;
+  			color: #737373;
+  		}
+            .powerRed{
+  	            background-color:red;
+  	            color:white;
+  	        }
+            .powerGreen{
+  	            background-color:green;
+  	            color:white;
+  	        }
+  	</style>
+      </head>
+
+  <img style='align:left' src='file:///Users/mike/Dropbox/Projects/axton/Axton-Inc/illuminator/web_controls/microSD/logo.png'/>                      
+  
+      <body onload='GetArduinoIO()'>
+  		<div class='IO_box' >
+
+               <span class='h1'>AT-9EZ</span><span class='h2'> (Variable Angles)</span>
+               <br/>
+  				<button type='button' class='power'  id='power'     onclick='GetButtonPower()'>I/O (Off)        </button><br />
+  			<hr>
+  			<span class='h2'>Illumination Controls</span>
+  				<button type='button' class='degree' id='degree10'  onclick='GetButton10()'   >Angle 10&deg Off  </button><br />
+  				<button type='button' class='degree' id='degree45'  onclick='GetButton45()'   >Angle 30&deg Off  </button><br />
+  				<button type='button' class='degree' id='degree130' onclick='GetButton130()'  >Angle 60&deg Off  </button><br /><br/>
+  		</div>
+          
+  		<div class='IO_box' >
+               <span class='h1'>Hybrid</span> <span class='h2'> (White & IR)</span>
+               <br/>
+  				<button type='button' class='power2'  id='power2'     onclick='GetButtonPower()'>I/O (Off)       </button><br />
+  			<hr>
+  			<span class='h2'>Illumination Controls</span>
+  				<button type='button' class='degree' id='whiteLight' onclick='GetButtonWhiteLight()' >White Light Off  </button><br />
+  				<button type='button' class='degree' id='irLight'    onclick='GetButtonIRLight()'    >IR Off           </button><br /><br/>
+  		</div>
+
+      </body>
+  </html>
+
