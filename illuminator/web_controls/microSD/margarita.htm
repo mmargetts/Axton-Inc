@@ -1,0 +1,164 @@
+  <!DOCTYPE html> 
+  <html>
+      <head>
+          <title>AxtonTech Illumnate the Night</title>
+          <script>
+        			_lowBeam1 ='';
+        			_highBeam1='';
+        			_dayNight1='';
+
+        			_lowBeam2 ='';
+        			_highBeam2='';
+        			_dayNight2='';
+
+        			_lowBeam3 ='';
+        			_highBeam3='';
+        			_dayNight3='';
+
+            function XMLToString(oXML) {   
+                if (window.ActiveXObject) {     
+                    return oXML.xml;  //if IE 
+                } else {     
+                    return (new XMLSerializer()).serializeToString(oXML);   //other browsers
+                } 
+            }
+        		function GetArduinoIO()
+        		{
+        			nocache = '&nocache=' + Math.random() * 1000000;
+        			// send HTTP GET request with LEDs to switch on/off if any
+        			request.open('GET', 'ajax_inputs' + _lowBeam1 + _highBeam1 + _dayNight1 + _lowBeam2 + _highBeam2 + _dayNight2 + _lowBeam3 + _highBeam3 + _dayNight3 + nocache, true);
+        			request.send(null);
+        			setTimeout('GetArduinoIO()', 1000);
+        			_lowBeam1 ='';
+        			_highBeam1='';
+        			_dayNight1='';
+
+        			_lowBeam2 ='';
+        			_highBeam2='';
+        			_dayNight2='';
+
+        			_lowBeam3 ='';
+        			_highBeam3='';
+        			_dayNight3='';
+
+        		}
+        
+    
+    
+        		function GetButtonLowBeam1()
+        		{
+        			_lowBeam1="&lowBeam1=1";
+        		}
+        		function GetButtonHighBeam1()
+        		{
+        			_highBeam1="&highBeam1=1";
+        		}
+        		function GetButtonDayNight1()
+        		{
+        			_dayNight1="_dayNight1=1";
+        		}
+
+        		function GetButtonLowBeam2()
+        		{
+        			_lowBeam2="&lowBeam2=1";
+        		}
+        		function GetButtonHighBeam2()
+        		{
+        			_highBeam2="&highBeam2=1";
+        		}
+        		function GetButtonDayNight2()
+        		{
+        			_dayNight2="_dayNight2=1";
+        		}
+
+        		function GetButtonLowBeam3()
+        		{
+        			_lowBeam3="&lowBeam3=1";
+        		}
+        		function GetButtonHighBeam3()
+        		{
+        			_highBeam3="&highBeam3=1";
+        		}
+        		function GetButtonDayNight3()
+        		{
+        			_dayNight3="_dayNight3=1";
+        		}
+        		
+        		
+  	      </script>
+
+  	<style>
+  		.IO_box {
+  			float  : left;
+  			margin : 0 10px 25px 0;
+  			border : 1px solid #73bc43;
+  			padding: 0 5px 0 5px;
+  			width  : 180px;
+  		}
+  		.h1 {
+  			font-family: arial, sans-serif;font-size: 120%; 
+  			color: #73bc43;
+  			margin: 0 0 10px 0;
+  		}
+  		.h2 {
+  			font-family: arial, sans-serif;font-size: 85%;
+  			color: #73bc43;
+  			margin: 5px 0 5px 0;
+  		}
+  		p, form, button {
+  			font-size: 80%;
+  			color: #252525;
+  			
+  			
+  		}
+  		.small_text {
+  			font-size: 70%;
+  			color: #737373;
+  		}
+            .powerRed{
+  	            background-color:red;
+  	            color:white;
+  	        }
+            .powerGreen{
+  	            background-color:green;
+  	            color:white;
+  	        }
+  	</style>
+      </head>
+
+  <img style='align:right' src='file:///Users/mike/Dropbox/Projects/axton/Axton-Inc/illuminator/web_controls/microSD/logo.png'/>                      
+  
+      <body onload='GetArduinoIO()'>
+  		<div class='IO_box' >
+
+          <span class='h1'>Illuminator #1</span>
+          <br/><br/>
+  				<button type='radio'  class='lowBeam'     id='lowBeam1'     name='illuminator1' onclick='GetButtonLowBeam1()'   ></button> Low Beam<br />
+  				<button type='radio'  class='highBeam'    id='highBeam1'    name='illuminator1' onclick='GetButtonHighBeam1()'  ></button> High Beam<br />
+  				<button type='radio'  class='dayNight'    id='dayNight1'    name='illuminator1' onclick='GetButtonDayNight1()'  ></button> Day/Night Switch<br /><br/>
+  				<button type='button' class='powerStatus' id='powerStatus1' name='illuminator1'                >Power Status off</button><br /><br/>
+  		</div>
+
+  		<div class='IO_box' >
+
+          <span class='h1'>Illuminator #2</span>
+          <br/><br/>
+  				<button type='radio'  class='lowBeam'     id='lowBeam2'     name='illuminator2' onclick='GetButton10()'   ></button> Low Beam<br />
+  				<button type='radio'  class='highBeam'    id='highBeam2'    name='illuminator2' onclick='GetButton45()'   ></button> High Beam<br />
+  				<button type='radio'  class='dayNight'    id='dayNight2'    name='illuminator2' onclick='GetButton130()'  ></button> Day/Night Switch<br /><br/>
+  				<button type='button' class='powerStatus' id='powerStatus2' name='illuminator2'           >Power Status off</button><br /><br/>
+  		</div>
+
+  		<div class='IO_box' >
+
+          <span class='h1'>Illuminator #3</span>
+          <br/><br/>
+  				<button type='radio'  class='lowBeam'     id='lowBeam3'     name='illuminator1' onclick='GetButton10()'   ></button> Low Beam<br />
+  				<button type='radio'  class='highBeam'    id='highBeam3'    name='illuminator1' onclick='GetButton45()'   ></button> High Beam<br />
+  				<button type='radio'  class='dayNight'    id='dayNight3'    name='illuminator1' onclick='GetButton130()'  ></button> Day/Night Switch<br /><br/>
+  				<button type='button' class='powerStatus' id='powerStatus3' name='illuminator1'           >Power Status off</button><br /><br/>
+  		</div>
+           
+      </body>
+  </html>
+
